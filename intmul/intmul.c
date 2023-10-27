@@ -1,3 +1,10 @@
+/**
+ * @file intmul.c
+ * @author Thomas Mages 12124528
+ * @brief Intmul Implementation
+ * @details This program recursively multiplies two number
+ * @date 18-10-2023
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -7,6 +14,7 @@
 
 /**
  * Reads input line character for character into char*. Pre-allocates 1024 and dynamically increases if growing is necessary.
+ * @details fails if the line is '\0' or
  * @return char* The string that is allocated and read from the input
  */
 static char *read_line(void);
@@ -46,8 +54,19 @@ static void split_and_insert(char *, char **, char **, size_t);
 
 int main(void) {
     char *line1 = read_line();
-    char *line2 = read_line();
+    if (strlen(line1) == 0) {
+        fprintf(stderr, "Expected two lines of input. Received only one or none.\n");
+        free(line1);
+        return EXIT_FAILURE;
+    }
 
+    char *line2 = read_line();
+    if (strlen(line2) == 0) {
+        fprintf(stderr, "Expected two lines of input. Received only one.\n");
+        free(line1);
+        free(line2);
+        return EXIT_FAILURE;
+    }
     if (is_hex(line1) == false) {
         fprintf(stderr, "Entered wrong input for number 1\n");
         return EXIT_FAILURE;
@@ -245,7 +264,7 @@ static char *read_line(void) {
     }
 
     while (true) {
-        curr_char = getchar();
+        curr_char = fgetc(stdin);
         if (curr_char == EOF || curr_char == '\n') {
             buffer[position] = '\0';
             return buffer;
