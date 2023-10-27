@@ -25,6 +25,19 @@ static bool is_hex(const char *);
  * @param new_l new length to be padded
  */
 static int pad_string(char **, size_t);
+static void multiply_and_write_stdout(char*, char*);
+
+static void multiply_and_write_stdout(char* hex1, char* hex2) {
+    unsigned long val1 = strtoul(hex1, NULL, 16);
+    unsigned long val2 = strtoul(hex2, NULL, 16);
+
+    // Multiply
+    unsigned long product = val1 * val2;
+
+    // Print the result
+    fprintf(stdout, "%lx\n", product);
+}
+
 
 static int pad_string(char ** input_str, size_t new_l) {
     if (input_str == NULL || *input_str == NULL || new_l <= strlen(*input_str)) {
@@ -113,6 +126,11 @@ int main(void) {
     size_t len1 = strlen(line1);
     size_t len2 = strlen(line2);
 
+    if (len1 == 1 && len2 == 1) {
+        multiply_and_write_stdout(line1, line2);
+        return EXIT_SUCCESS;
+    }
+
     size_t len1Missing = len1 % 2;
     size_t len2Missing = len2 % 2;
 
@@ -142,8 +160,6 @@ int main(void) {
         }
     }
 
-    printf("%s", line1);
-    printf("%s", line2);
     free(line1);
     free(line2);
     return 0;
