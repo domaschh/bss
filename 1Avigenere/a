@@ -1,0 +1,79 @@
+1,2,3,4,5,6,7,8,9,10,11,12
+T,T,T,T,F,F,T
+A-Testcase 01: usage-1 works
+$>./vigenere -x
+<usage message>
+$>echo $?
+1
+Testcase 02: usage-2 works
+$>./vigenere -d -d
+<usage message>
+$>echo $?
+1
+Testcase 03: usage-3 works
+$>./vigenere -o
+<usage message>
+$>echo $?
+1
+Testcase 04: usage-4 works
+$>./vigenere
+<usage message>
+$>echo $?
+1
+Testcase 05: easy-1
+$>echo -e "Operating Systems.\nExtra secure" | ./vigenere "Test"
+Htwktxagz Krlxwfl.
+Xblkt kxvyjx
+$>echo $?
+0
+Testcase 06: easy-2
+$>echo -e "Htwktxagz Krlxwfl.\nXblkt kxvyjx\n..." | ./vigenere -d "TEST"
+Operating Systems.
+Extra secure
+...
+$>echo $?
+0
+Testcase 07: key-error-1 -works
+$>echo -e "Input" | ./vigenere "Key123"
+<error message>
+$>echo $?
+1
+Testcase 08: file-1
+$>echo -e "Keep the key 53cur3, Kerckhoff said.\nwhat? 53cur3?\nYes." > infile.txt
+$>./vigenere -o outfile.txt Shannon infile.txt
+$>echo $?
+0
+$>cat outfile.txt
+Clec huw krl 53jue3, Clrpxvbxm fnwq.
+ooag? 53jue3?
+Qls.
+Testcase 09: file-2
+$>echo '.,:-!=?% is this REALLY %n%% true???' > infile1
+$>echo -e "testing\ntestTESTtestTESTtestTESTtestTESTtest" > infile2
+$>./vigenere Welcome infile1 infile2
+.,:-!=?% tu flew TSMPHC %b%% xcws???
+pidvwzk
+pidvHQWPxpuhFIOXeggfXAWEvsexPIDVhqwp
+$>echo $?
+0
+Testcase 10: long-line
+$>( echo -n "yes"; printf -- "-%.0s" {1..8000}; echo "..." ) > longline
+$>./vigenere "yes" longline > longgrep
+$>echo $?
+0
+$>cat longgrep | tr -d "-"
+wik...
+Testcase 11: file-error-1
+$>rm -rf nonExistingTestfile
+$>./vigenere test nonExistingTestfile
+<error message>
+$>echo $?
+1
+Testcase 12: file-error-2
+$>touch existingTestfile
+$>chmod 0000 existingTestfile
+$>echo "test" > existingTestfile
+bash: existingTestfile: Permission denied
+$>echo "test" | ./vigenere -o existingTestfile test
+<error message>
+$>echo $?

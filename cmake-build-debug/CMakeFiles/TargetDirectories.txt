@@ -1,0 +1,3 @@
+/Users/thomasmages/CLionProjects/bss/cmake-build-debug/CMakeFiles/bss.dir
+/Users/thomasmages/CLionProjects/bss/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/thomasmages/CLionProjects/bss/cmake-build-debug/CMakeFiles/rebuild_cache.dir
