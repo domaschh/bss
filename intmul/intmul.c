@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
 
 /**
  * Reads input line character for character into char*. Pre-allocates 1024 and dynamically increases if growing is necessary.
@@ -36,10 +37,10 @@ static void multiply_and_write_stdout(char*, char*);
 /**
  * Takes unallocated half strings and allocates first half of input into the first and vice versa with second
  * @pre l != 0
- * @param pString
- * @param ah
- * @param aj
- * @param l
+ * @param input Input string that needs to be allocated
+ * @param first_h char* that gets allocated and duplicated into
+ * @param second_h char* that gets allocated and duplicated into
+ * @param l lenth of input needs to be power of 2
  */
 static void split_and_insert(char *, char **, char **, size_t);
 
@@ -47,7 +48,6 @@ int main(void) {
     char *line1 = read_line();
     char *line2 = read_line();
 
-    printf("You entered:\n%s\n%s\n", line1, line2);
     if (is_hex(line1) == false) {
         fprintf(stderr, "Entered wrong input for number 1\n");
         return EXIT_FAILURE;
@@ -61,6 +61,7 @@ int main(void) {
     size_t len1 = strlen(line1);
     size_t len2 = strlen(line2);
 
+    //Base Case for recursion
     if (len1 == 1 && len2 == 1) {
         multiply_and_write_stdout(line1, line2);
         return EXIT_SUCCESS;
@@ -96,7 +97,6 @@ int main(void) {
     }
 
     size_t total_l = strlen(line1);
-    printf("%lu", total_l);
     char* ah;
     char* aj;
     char* bh;
@@ -105,17 +105,77 @@ int main(void) {
     split_and_insert(line1, &ah, &aj, total_l);
     split_and_insert(line2, &bh, &bj, total_l);
 
-    printf("\n%s", ah);
-    printf("\n%s", aj);
-    printf("\n%s", bh);
-    printf("\n%s", bj);
+    char* inputs[4][2] = {{ah, bh}, {ah, bj}, {aj, bh}, {aj, bj}};
+
+    pid_t child_process_ids[4];
+    int inPipes[4][2];
+    int outPipes[4][2];
+
+    for (int i = 0; i < 4; i++)
+    {
+        pipe(inPipes[i]);
+        pipe(outPipes[i]);
+        child_process_ids[i] = fork();
+
+        if (child_process_ids[i] < 0) {
+            fprintf(stderr, "Forking failed");
+            return EXIT_FAILURE;
+        }
+        if (child_process_ids[i] == 0) { // Child
+            close(inPipes[i][1]);
+            close(outPipes[i][0]);
+
+            dup2(inPipes[i][0], STDIN_FILENO);
+            dup2(outPipes[i][1], STDOUT_FILENO);
+
+            close(inPipes[i][0]);
+            close(outPipes[i][1]);
+
+            execlp("./intmul", "intmul", (char *) NULL);
+            exit(1); // execlp failed
+        } else { // Parent
+            close(inPipes[i][0]);
+            close(outPipes[i][1]);
+
+            dprintf(inPipes[i][1], "%s\n%s\n", inputs[i][0], inputs[i][1]);
+            close(inPipes[i][1]);
+        }
+    }
+
+    char buffer[2048];
+
+    unsigned long results[4];
+
+    for (int i = 0; i < 4; i++) {
+        memset(buffer, 0, sizeof(buffer));
+        read(outPipes[i][0], buffer, sizeof(buffer) - 1);  // -1 null-termination
+        results[i] = strtoul(buffer, NULL, 16);
+        close(outPipes[i][0]);
+    }
+    for (int i = 0; i < 4; i++) {
+        wait(NULL); // Wait for all children to terminate
+    }
+    size_t n = total_l / 2;
+    unsigned long result =
+            (results[0] << (4 * n * 2)) +
+            (results[1] << (4 * n)) +
+            (results[2] << (4 * n)) +
+            results[3];
+
+    printf("%lx",result);
+
+    //freeing of allocated resources
+    free(ah);
+    free(aj);
+    free(bh);
+    free(bj);
     free(line1);
     free(line2);
     return 0;
 }
 
-static void split_and_insert(char *input, char **first_h, char **second_h, size_t l) {
-    size_t half_l = l / 2;
+static void split_and_insert(char *input, char **first_h, char **second_h, size_t input_l) {
+    size_t half_l = input_l / 2;
 
     *first_h = strndup(input, half_l);
     *second_h = strndup(input + half_l, half_l);
