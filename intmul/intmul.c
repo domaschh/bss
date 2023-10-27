@@ -25,88 +25,23 @@ static bool is_hex(const char *);
  * @param new_l new length to be padded
  */
 static int pad_string(char **, size_t);
+/**
+ * Multiplies both hex values and writes to stdout
+ * @pre len of both char arrays is 1
+ * @param hex1
+ * @param hex2
+ */
 static void multiply_and_write_stdout(char*, char*);
 
-static void multiply_and_write_stdout(char* hex1, char* hex2) {
-    unsigned long val1 = strtoul(hex1, NULL, 16);
-    unsigned long val2 = strtoul(hex2, NULL, 16);
-
-    // Multiply
-    unsigned long product = val1 * val2;
-
-    // Print the result
-    fprintf(stdout, "%lx\n", product);
-}
-
-
-static int pad_string(char ** input_str, size_t new_l) {
-    if (input_str == NULL || *input_str == NULL || new_l <= strlen(*input_str)) {
-        return 1;
-    }
-
-    size_t original_len = strlen(*input_str);
-    size_t padding_len = new_l - original_len;
-    *input_str = realloc(*input_str, new_l + 1); // +1 for null terminator
-
-    if (!input_str) {
-        fprintf(stderr, "Reallocation for string failed\n");
-        return 1;
-    }
-
-    // Move the characters to the right to create space for padding
-    for (int i = original_len; i >= 0; i--) {  // including null terminator
-        (*input_str)[i + padding_len] = (*input_str)[i];
-    }
-
-    // Fill the new space with zeros
-    for (int i = 0; i < padding_len; i++) {
-        (*input_str)[i] = '0';
-    }
-    return 0;
-}
-
-
-static bool is_hex(const char *str) {
-    while (*str) {
-        if (!isdigit(*str) && !(tolower(*str) >= 'a' && tolower(*str) <= 'f')) {
-            return false;
-        }
-        str++;
-    }
-    return true;
-}
-
-static char *read_line(void) {
-    int buffer_size = 1024;  // Initial buffer size
-    int position = 0;
-    char *buffer = malloc(sizeof(char) * buffer_size);
-    int curr_char;
-
-    if (!buffer) {
-        fprintf(stderr, "Memory allocation error\n");
-        exit(EXIT_FAILURE);
-    }
-
-    while (true) {
-        curr_char = getchar();
-        if (curr_char == EOF || curr_char == '\n') {
-            buffer[position] = '\0';
-            return buffer;
-        } else {
-            buffer[position] = curr_char;
-        }
-        position++;
-
-        if (position >= buffer_size) {
-            buffer_size *= 2;
-            buffer = realloc(buffer, buffer_size);
-            if (!buffer) {
-                fprintf(stderr, "Memory allocation error\n");
-                exit(EXIT_FAILURE);
-            }
-        }
-    }
-}
+/**
+ * Takes unallocated half strings and allocates first half of input into the first and vice versa with second
+ * @pre l != 0
+ * @param pString
+ * @param ah
+ * @param aj
+ * @param l
+ */
+static void split_and_insert(char *, char **, char **, size_t);
 
 int main(void) {
     char *line1 = read_line();
@@ -160,8 +95,113 @@ int main(void) {
         }
     }
 
+    size_t total_l = strlen(line1);
+    printf("%lu", total_l);
+    char* ah;
+    char* aj;
+    char* bh;
+    char* bj;
+
+    split_and_insert(line1, &ah, &aj, total_l);
+    split_and_insert(line2, &bh, &bj, total_l);
+
+    printf("\n%s", ah);
+    printf("\n%s", aj);
+    printf("\n%s", bh);
+    printf("\n%s", bj);
     free(line1);
     free(line2);
     return 0;
+}
+
+static void split_and_insert(char *input, char **first_h, char **second_h, size_t l) {
+    size_t half_l = l / 2;
+
+    *first_h = strndup(input, half_l);
+    *second_h = strndup(input + half_l, half_l);
+}
+
+
+static void multiply_and_write_stdout(char* hex1, char* hex2) {
+    unsigned long val1 = strtoul(hex1, NULL, 16);
+    unsigned long val2 = strtoul(hex2, NULL, 16);
+
+    // Multiply
+    unsigned long product = val1 * val2;
+
+    // Print the result
+    fprintf(stdout, "%lx\n", product);
+}
+
+
+static int pad_string(char ** input_str, size_t new_l) {
+    if (strlen(*input_str) == new_l) {
+        return 0;
+    }
+    if (input_str == NULL || *input_str == NULL || new_l < strlen(*input_str)) {
+        return 1;
+    }
+
+    size_t original_len = strlen(*input_str);
+    size_t padding_len = new_l - original_len;
+    *input_str = realloc(*input_str, new_l + 1); // +1 for null terminator
+
+    if (!input_str) {
+        fprintf(stderr, "Reallocation for string failed\n");
+        return 1;
+    }
+
+    // Move the characters to the right to create space for padding
+    for (int i = original_len; i >= 0; i--) {  // including null terminator
+        (*input_str)[i + padding_len] = (*input_str)[i];
+    }
+
+    // Fill the new space with zeros
+    for (int i = 0; i < padding_len; i++) {
+        (*input_str)[i] = '0';
+    }
+    return 0;
+}
+
+static bool is_hex(const char *str) {
+    while (*str) {
+        if (!isdigit(*str) && !(tolower(*str) >= 'a' && tolower(*str) <= 'f')) {
+            return false;
+        }
+        str++;
+    }
+    return true;
+}
+
+static char *read_line(void) {
+    int buffer_size = 1024;  // Initial buffer size
+    int position = 0;
+    char *buffer = malloc(sizeof(char) * buffer_size);
+    int curr_char;
+
+    if (!buffer) {
+        fprintf(stderr, "Memory allocation error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (true) {
+        curr_char = getchar();
+        if (curr_char == EOF || curr_char == '\n') {
+            buffer[position] = '\0';
+            return buffer;
+        } else {
+            buffer[position] = curr_char;
+        }
+        position++;
+
+        if (position >= buffer_size) {
+            buffer_size *= 2;
+            buffer = realloc(buffer, buffer_size);
+            if (!buffer) {
+                fprintf(stderr, "Memory allocation error\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
 }
 
