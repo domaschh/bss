@@ -1,3 +1,13 @@
+# ----------------------------------------------------------------------------
+# Makefile for Intmul
+#
+# Author: Thomas Mages
+# Email: 212124528@student.tuwien.ac.at
+# Date: 27.10.2023
+# Description: This Makefile compiles and builds the intmul project
+# ----------------------------------------------------------------------------
+
+
 # Variables
 CC = gcc
 CFLAGS = -std=c99 -pedantic -Wall -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE \
