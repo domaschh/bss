@@ -1,15 +1,15 @@
 # Variables
-# CC = gcc
-# CFLAGS = -std=c99 -pedantic -Wall -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE \
-#          -D_POSIX_C_SOURCE=200809L -g
-#          OBJS = intmul.o utils.o
+CC = gcc
+CFLAGS = -std=c99 -pedantic -Wall -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE \
+          -D_POSIX_C_SOURCE=200809L -g
+          OBJS = intmul.o utils.o
 #
 #          # Default rule
 all: intmul
 
 # Linking rule
-# intmul: $(OBJS)
-#     $(CC) $(CFLAGS) -o $@ $^
+intmul: $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
 #
 #     # Compilation rules
 intmul.o: intmul.c intmul.h utils.h
@@ -19,8 +19,8 @@ utils.o: utils.c utils.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 # Clean rule
-# clean:
-#     rm -f intmul $(OBJS)
+clean:
+	$ rm -f intmul
 #
-#     .PHONY: all clean
+.PHONY: all clean
 #
