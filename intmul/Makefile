@@ -12,7 +12,7 @@
 CC = gcc
 CFLAGS = -std=c99 -pedantic -Wall -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE \
           -D_POSIX_C_SOURCE=200809L -g
-          OBJS = intmul.o utils.o
+          OBJS = intmul.o
 #
 #          # Default rule
 all: intmul
@@ -22,15 +22,12 @@ intmul: $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 #
 #     # Compilation rules
-intmul.o: intmul.c intmul.h utils.h
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-utils.o: utils.c utils.h
+intmul.o: intmul.c intmul.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 # Clean rule
 clean:
-	$ rm -f intmul
+	$ rm -f intmul intmul.o
 #
 .PHONY: all clean
 #
