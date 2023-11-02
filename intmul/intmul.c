@@ -1,3 +1,5 @@
+#include <errno.h>
+#include <string.h>
 /**
  * @file intmul.c
  * @author Thomas Mages 12124528
@@ -174,7 +176,7 @@ int main(void) {
         }
 
         child_process_ids[i] = fork();
-
+        fprintf(stderr, "forkfaiiled! %s\n", strerror(errno));
         if (child_process_ids[i] < 0) {
             fprintf(stderr, "Forking failed");
             return EXIT_FAILURE;
