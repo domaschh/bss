@@ -66,66 +66,26 @@ char intToHexChar(int n) {
     return '0';
 }
 
-// Function to perform a bitwise left shift on a hex string.
 char* shiftHexLeftByBits(const char* hex, size_t bits) {
-    size_t hexLen = strlen(hex);
-    size_t totalBits = hexLen * 4;
-    size_t newTotalBits = totalBits + bits;
-    size_t newHexLen = (newTotalBits + 3) / 4;
+    // Determine how many hex digits to add based on the number of bits to shift
+    size_t hexDigitsToAdd = bits / 4;
+    size_t len = strlen(hex);
+    size_t newLen = len + hexDigitsToAdd;
 
-    char* shifted = (char*)calloc(newHexLen + 1, sizeof(char));
+    // Allocate and initialize the new string
+    char* shifted = calloc(newLen + 1, sizeof(char));
     if (!shifted) {
         perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
 
-    // Initialize shifted hex string with '0'.
-    memset(shifted, '0', newHexLen);
+    // Copy the original hex string
+    strcpy(shifted, hex);
 
-    // Start shifting from the end of the hex string.
-    for (int i = hexLen - 1; i >= 0; i--) {
-        int value = hexCharToInt(hex[i]);
-        for (int j = 0; j < 4; j++) {
-            if (value & (1 << j)) {
-                int bitPos = (hexLen - i - 1) * 4 + j + bits; // Calculate the bit position after shift
-                if (bitPos < newTotalBits) {
-                    shifted[bitPos / 4] |= 1 << (bitPos % 4);
-                }
-            }
-        }
-    }
-
-    // Convert shifted binary values back to hexadecimal characters.
-    for (size_t i = 0; i < newHexLen; i++) {
-        int digitValue = 0;
-        for (int j = 0; j < 4; j++) {
-            if (shifted[i] & (1 << j)) {
-                digitValue |= 1 << j;
-            }
-        }
-        shifted[i] = intToHexChar(digitValue);
-    }
-
-    // Reverse the string since we built it in reverse.
-    for (size_t i = 0; i < newHexLen / 2; i++) {
-        char temp = shifted[i];
-        shifted[i] = shifted[newHexLen - i - 1];
-        shifted[newHexLen - i - 1] = temp;
-    }
+    // Append the appropriate number of '0's to the end of the string
+    memset(shifted + len, '0', hexDigitsToAdd);
 
     return shifted;
-}
-
-void reverseString(char* str) {
-    int i = 0;
-    int j = strlen(str) - 1;
-    while (i < j) {
-        char temp = str[i];
-        str[i] = str[j];
-        str[j] = temp;
-        i++;
-        j--;
-    }
 }
 
 char* addHexStrings(const char* hex1, const char* hex2) {
@@ -294,13 +254,6 @@ int main(void) {
     char* tmp1 = addHexStrings(s1, s2);
     char* tmp2 = addHexStrings(s3, s4);
     char* tmp3 = addHexStrings(tmp1, tmp2);
-
-//    size_t n = total_l / 2;
-//    unsigned long result =
-//            (results[0] << (4 * n * 2)) +
-//            (results[1] << (4 * n)) +
-//            (results[2] << (4 * n)) +
-//            results[3];
 
     printf("%s",tmp3);
 
