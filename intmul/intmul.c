@@ -52,77 +52,37 @@ static void multiply_and_write_stdout(char*, char*);
  */
 static void split_and_insert(char *, char **, char **, size_t);
 
+/**
+ * Converts a Hex char to int
+ * considers both Uppercase and lowercase
+ * @param c
+ * @return
+ */
+static int hex_char_to_int(char);
 
-int hexCharToInt(char c) {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    return 0;
-}
+/**
+ * Converts an integer to a Hex character
+ * @param n the integer to be converted
+ * @return  char that is returned
+ */
+static char int_to_hex_char(int n);
 
-char intToHexChar(int n) {
-    if (n >= 0 && n <= 9) return '0' + n;
-    if (n >= 10 && n <= 15) return 'a' + (n - 10);
-    return '0';
-}
 
-char* shiftHexLeftByBits(const char* hex, size_t bits) {
-    // Determine how many hex digits to add based on the number of bits to shift
-    size_t hexDigitsToAdd = bits / 4;
-    size_t len = strlen(hex);
-    size_t newLen = len + hexDigitsToAdd;
+/**
+ * Mimics the << operator. Creates a new char* that has the shifted hex value inside
+ * @param hex char* that holds the hex value
+ * @param bits
+ * @return
+ */
+static char* leftshift_hex_str(const char*, size_t);
 
-    // Allocate and initialize the new string
-    char* shifted = calloc(newLen + 1, sizeof(char));
-    if (!shifted) {
-        perror("Memory allocation failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Copy the original hex string
-    strcpy(shifted, hex);
-
-    // Append the appropriate number of '0's to the end of the string
-    memset(shifted + len, '0', hexDigitsToAdd);
-
-    return shifted;
-}
-
-char* addHexStrings(const char* hex1, const char* hex2) {
-    // Find lengths of the hex strings
-    int len1 = strlen(hex1);
-    int len2 = strlen(hex2);
-    // The maximum length of the result would be one more than the longest input
-    int maxLen = (len1 > len2 ? len1 : len2) + 1;
-
-    // Allocate space for the result (including null terminator)
-    char* result = calloc(maxLen + 1, sizeof(char));
-    if (!result) {
-        perror("Memory allocation failed");
-        exit(EXIT_FAILURE);
-    }
-
-    int carry = 0;
-    // Start adding from the least significant digit (end of the string)
-    for (int i = 0; i < maxLen; i++) {
-        int digit1 = (i < len1) ? hexCharToInt(hex1[len1 - 1 - i]) : 0;
-        int digit2 = (i < len2) ? hexCharToInt(hex2[len2 - 1 - i]) : 0;
-        int sum = digit1 + digit2 + carry;
-
-        // Update the carry
-        carry = sum / 16;
-        // Convert the sum to a single hex digit
-        result[maxLen - 1 - i] = intToHexChar(sum % 16);
-    }
-
-    // If the last carry is nonzero, shift the result to make space for it
-    if (result[0] == '0') {
-        // Move the string one place to the right, discarding the leading '0'
-        memmove(result, result + 1, maxLen);
-    }
-
-    return result;
-}
+/**
+ * Adds two hex numbers represented as char* and returns the result as another char*
+ * @param number1
+ * @param number2
+ * @return
+ */
+static char* add_hex_str(char* number1, char* number2);
 
 int main(void) {
     char *line1 = read_line();
@@ -247,13 +207,13 @@ int main(void) {
         wait(NULL); // Wait for all children to terminate
     }
     size_t n = total_l / 2;
-    char* s1 = shiftHexLeftByBits(results[0], 4*n*2);
-    char* s2 = shiftHexLeftByBits(results[1], 4*n);
-    char* s3 = shiftHexLeftByBits(results[2], 4*n);
-    char* s4 = shiftHexLeftByBits(results[3], 0);
-    char* tmp1 = addHexStrings(s1, s2);
-    char* tmp2 = addHexStrings(s3, s4);
-    char* tmp3 = addHexStrings(tmp1, tmp2);
+    char* s1 = leftshift_hex_str(results[0], 4*n*2);
+    char* s2 = leftshift_hex_str(results[1], 4*n);
+    char* s3 = leftshift_hex_str(results[2], 4*n);
+    char* s4 = leftshift_hex_str(results[3], 0);
+    char* tmp1 = add_hex_str(s1, s2);
+    char* tmp2 = add_hex_str(s3, s4);
+    char* tmp3 = add_hex_str(tmp1, tmp2);
 
     printf("%s",tmp3);
 
@@ -356,5 +316,77 @@ static char *read_line(void) {
             }
         }
     }
+}
+
+
+static int hex_char_to_int(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    return 0;
+}
+
+static char int_to_hex_char(int n) {
+    if (n >= 0 && n <= 9) return '0' + n;
+    if (n >= 10 && n <= 15) return 'a' + (n - 10);
+    return '0';
+}
+
+static char* leftshift_hex_str(const char* hex, size_t bits) {
+    // Determine how many hex digits to add based on the number of bits to shift
+    size_t hexDigitsToAdd = bits / 4;
+    size_t len = strlen(hex);
+    size_t newLen = len + hexDigitsToAdd;
+
+    // Allocate and initialize the new string
+    char* shifted = calloc(newLen + 1, sizeof(char));
+    if (!shifted) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Copy the original hex string
+    strcpy(shifted, hex);
+
+    // Append the appropriate number of '0's to the end of the string
+    memset(shifted + len, '0', hexDigitsToAdd);
+
+    return shifted;
+}
+
+static char* add_hex_str(char* number1, char* number2) {
+    // Find lengths of the hex strings
+    int len1 = strlen(number1);
+    int len2 = strlen(number2);
+    // The maximum length of the result would be one more than the longest input
+    int maxLen = (len1 > len2 ? len1 : len2) + 1;
+
+    // Allocate space for the result (including null terminator)
+    char* result = calloc(maxLen + 1, sizeof(char));
+    if (!result) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    int carry = 0;
+    // Start adding from the least significant digit (end of the string)
+    for (int i = 0; i < maxLen; i++) {
+        int digit1 = (i < len1) ? hex_char_to_int(number1[len1 - 1 - i]) : 0;
+        int digit2 = (i < len2) ? hex_char_to_int(number2[len2 - 1 - i]) : 0;
+        int sum = digit1 + digit2 + carry;
+
+        // Update the carry
+        carry = sum / 16;
+        // Convert the sum to a single hex digit
+        result[maxLen - 1 - i] = int_to_hex_char(sum % 16);
+    }
+
+    // If the last carry is nonzero, shift the result to make space for it
+    if (result[0] == '0') {
+        // Move the string one place to the right, discarding the leading '0'
+        memmove(result, result + 1, maxLen);
+    }
+
+    return result;
 }
 

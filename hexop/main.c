@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-int hexCharToInt(char c) {
+int hex_char_to_int(char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'A' && c <= 'F') return c - 'A' + 10;
     if (c >= 'a' && c <= 'f') return c - 'a' + 10;
     return 0;
 }
 
-char intToHexChar(int n) {
+char int_to_hex_char(int n) {
     if (n >= 0 && n <= 9) return '0' + n;
     if (n >= 10 && n <= 15) return 'A' + (n - 10);
     return '0';
