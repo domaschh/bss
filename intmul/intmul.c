@@ -283,7 +283,7 @@ static void multiply_and_write_stdout(char* hex1, char* hex2) {
     unsigned long product = val1 * val2;
 
     // Print the result
-    fprintf(stdout, "%lx\n", product);
+    fprintf(stdout, "%lx", product);
 }
 
 
