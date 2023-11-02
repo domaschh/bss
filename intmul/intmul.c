@@ -164,8 +164,15 @@ int main(void) {
 
     for (int i = 0; i < 4; i++)
     {
-        pipe(inPipes[i]);
-        pipe(outPipes[i]);
+        if (pipe(inPipes[i]) == -1) {
+            fprintf(stderr, "Piping inputs failed");
+            return EXIT_FAILURE;
+        }
+        if (pipe(outPipes[i]) == -1) {
+            fprintf(stderr, "Piping outputs failed");
+            return EXIT_FAILURE;
+        }
+
         child_process_ids[i] = fork();
 
         if (child_process_ids[i] < 0) {
@@ -176,8 +183,14 @@ int main(void) {
             close(inPipes[i][1]);
             close(outPipes[i][0]);
 
-            dup2(inPipes[i][0], STDIN_FILENO);
-            dup2(outPipes[i][1], STDOUT_FILENO);
+            if (dup2(inPipes[i][0], STDIN_FILENO) == -1) {
+                fprintf(stderr, "Dup2 failed for inPipes");
+                return EXIT_FAILURE;
+            }
+            if(dup2(outPipes[i][1], STDOUT_FILENO) == -1) {
+                fprintf(stderr, "Dup2 failed for outipes");
+                return EXIT_FAILURE;
+            }
 
             close(inPipes[i][0]);
             close(outPipes[i][1]);
