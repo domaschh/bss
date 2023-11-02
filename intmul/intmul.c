@@ -204,8 +204,14 @@ int main(void) {
         close(outPipes[i][0]);
     }
     for (int i = 0; i < 4; i++) {
-        wait(NULL); // Wait for all children to terminate
+        int child_status;
+        waitpid(child_process_ids[i], &child_status, 0); // Wait for all children to terminate
+        if (child_status == 1) {
+            fprintf(stderr, "Waiting for child failed");
+            return EXIT_FAILURE;
+        }
     }
+    
     size_t n = total_l / 2;
     char* s1 = leftshift_hex_str(results[0], 4*n*2);
     char* s2 = leftshift_hex_str(results[1], 4*n);
@@ -217,7 +223,13 @@ int main(void) {
 
     printf("%s",tmp3);
 
-    //freeing of allocated resources
+    free(s1);
+    free(s2);
+    free(s3);
+    free(s4);
+    free(tmp1);
+    free(tmp2);
+    free(tmp3);
     free(ah);
     free(aj);
     free(bh);
