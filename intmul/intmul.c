@@ -205,6 +205,15 @@ int main(void) {
         }
     }
 
+    for (int i = 0; i < 4; i++) {
+        int child_status;
+        waitpid(child_process_ids[i], &child_status, 0); // Wait for all children to terminate
+        if (child_status == 1) {
+            fprintf(stderr, "Waiting for child failed");
+            return EXIT_FAILURE;
+        }
+    }
+
     char buffer[2048];
 
     char* results[4];
@@ -214,14 +223,6 @@ int main(void) {
         read(outPipes[i][0], buffer, sizeof(buffer) - 1);  // -1 null-termination
         results[i] = strdup(buffer);
         close(outPipes[i][0]);
-    }
-    for (int i = 0; i < 4; i++) {
-        int child_status;
-        waitpid(child_process_ids[i], &child_status, 0); // Wait for all children to terminate
-        if (child_status == 1) {
-            fprintf(stderr, "Waiting for child failed");
-            return EXIT_FAILURE;
-        }
     }
     
     size_t n = total_l / 2;
