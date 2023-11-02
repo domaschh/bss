@@ -62,7 +62,7 @@ int hexCharToInt(char c) {
 
 char intToHexChar(int n) {
     if (n >= 0 && n <= 9) return '0' + n;
-    if (n >= 10 && n <= 15) return 'A' + (n - 10);
+    if (n >= 10 && n <= 15) return 'a' + (n - 10);
     return '0';
 }
 
@@ -294,6 +294,7 @@ int main(void) {
     char* tmp1 = addHexStrings(s1, s2);
     char* tmp2 = addHexStrings(s3, s4);
     char* tmp3 = addHexStrings(tmp1, tmp2);
+
 //    size_t n = total_l / 2;
 //    unsigned long result =
 //            (results[0] << (4 * n * 2)) +
