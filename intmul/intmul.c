@@ -180,9 +180,6 @@ int main(void) {
             return EXIT_FAILURE;
         }
         if (child_process_ids[i] == 0) { // Child
-            close(inPipes[i][1]);
-            close(outPipes[i][0]);
-
             if (dup2(inPipes[i][0], STDIN_FILENO) == -1) {
                 fprintf(stderr, "Dup2 failed for inPipes");
                 return EXIT_FAILURE;
@@ -194,6 +191,8 @@ int main(void) {
 
             close(inPipes[i][0]);
             close(outPipes[i][1]);
+            close(inPipes[i][1]);
+            close(outPipes[i][0]);
 
             execlp("./intmul", "intmul", (char *) NULL);
             exit(1); // execlp failed
@@ -236,6 +235,10 @@ int main(void) {
 
     printf("%s",tmp3);
 
+    free(results[0]);
+    free(results[1]);
+    free(results[2]);
+    free(results[3]);
     free(s1);
     free(s2);
     free(s3);
@@ -263,12 +266,7 @@ static void split_and_insert(char *input, char **first_h, char **second_h, size_
 static void multiply_and_write_stdout(char* hex1, char* hex2) {
     unsigned long val1 = strtoul(hex1, NULL, 16);
     unsigned long val2 = strtoul(hex2, NULL, 16);
-
-    // Multiply
-    unsigned long product = val1 * val2;
-
-    // Print the result
-    fprintf(stdout, "%lx", product);
+    fprintf(stdout, "%lx", val1 * val2);
 }
 
 
