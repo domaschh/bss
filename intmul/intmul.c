@@ -1,5 +1,4 @@
-#include <errno.h>
-#include <string.h>
+
 /**
  * @file intmul.c
  * @author Thomas Mages 12124528
@@ -13,6 +12,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 /**
  * Reads input line character for character into char*. Pre-allocates 1024 and dynamically increases if growing is necessary.
@@ -52,7 +52,7 @@ static void multiply_and_write_stdout(char*, char*);
  * @param second_h char* that gets allocated and duplicated into
  * @param l lenth of input needs to be power of 2
  */
-static void split_and_insert(char *, char **, char **, size_t);
+static int split_and_insert(char *, char **, char **, size_t);
 
 /**
  * Converts a Hex char to int
@@ -155,61 +155,68 @@ int main(void) {
     char* bh;
     char* bj;
 
-    split_and_insert(line1, &ah, &aj, total_l);
-    split_and_insert(line2, &bh, &bj, total_l);
+    if (split_and_insert(line1, &ah, &aj, total_l) == -1) {
+        fprintf(stderr, "Splitting line one failed");
+        return EXIT_FAILURE;
+    }
+
+    if (split_and_insert(line2, &bh, &bj, total_l) == -1) {
+        fprintf(stderr, "Splitting line one failed");
+        return EXIT_FAILURE;
+    }
 
     char* inputs[4][2] = {{ah, bh}, {ah, bj}, {aj, bh}, {aj, bj}};
 
     pid_t child_process_ids[4];
-    int inPipes[4][2];
-    int outPipes[4][2];
+    int in_pipes[4][2];
+    int out_pipes[4][2];
 
     for (int i = 0; i < 4; i++)
     {
-        if (pipe(inPipes[i]) == -1) {
+        if (pipe(in_pipes[i]) == -1) {
             fprintf(stderr, "Piping inputs failed");
             return EXIT_FAILURE;
         }
-        if (pipe(outPipes[i]) == -1) {
+        if (pipe(out_pipes[i]) == -1) {
             fprintf(stderr, "Piping outputs failed");
             return EXIT_FAILURE;
         }
 
         child_process_ids[i] = fork();
-        fprintf(stderr, "forkfaiiled! %s\n", strerror(errno));
+
         if (child_process_ids[i] < 0) {
             fprintf(stderr, "Forking failed");
             return EXIT_FAILURE;
         }
-        if (child_process_ids[i] == 0) { // Child
-            if (dup2(inPipes[i][0], STDIN_FILENO) == -1) {
-                fprintf(stderr, "Dup2 failed for inPipes");
+        if (child_process_ids[i] == 0) {
+            if (dup2(in_pipes[i][0], STDIN_FILENO) == -1) {
+                fprintf(stderr, "Dup2 failed for in_pipes");
                 return EXIT_FAILURE;
             }
-            if(dup2(outPipes[i][1], STDOUT_FILENO) == -1) {
+            if(dup2(out_pipes[i][1], STDOUT_FILENO) == -1) {
                 fprintf(stderr, "Dup2 failed for outipes");
                 return EXIT_FAILURE;
             }
 
-            close(inPipes[i][0]);
-            close(outPipes[i][1]);
-            close(inPipes[i][1]);
-            close(outPipes[i][0]);
+            close(in_pipes[i][0]);
+            close(out_pipes[i][1]);
+            close(in_pipes[i][1]);
+            close(out_pipes[i][0]);
 
             execlp("./intmul", "intmul", (char *) NULL);
-            exit(1); // execlp failed
+            exit(EXIT_FAILURE); // execlp failed
         } else { // Parent
-            close(inPipes[i][0]);
-            close(outPipes[i][1]);
+            close(in_pipes[i][0]);
+            close(out_pipes[i][1]);
 
-            dprintf(inPipes[i][1], "%s\n%s\n", inputs[i][0], inputs[i][1]);
-            close(inPipes[i][1]);
+            dprintf(in_pipes[i][1], "%s\n%s\n", inputs[i][0], inputs[i][1]);
+            close(in_pipes[i][1]);
         }
     }
 
     for (int i = 0; i < 4; i++) {
         int child_status;
-        waitpid(child_process_ids[i], &child_status, 0); // Wait for all children to terminate
+        waitpid(child_process_ids[i], &child_status, 0);
         if (child_status == 1) {
             fprintf(stderr, "Waiting for child failed");
             return EXIT_FAILURE;
@@ -222,9 +229,9 @@ int main(void) {
 
     for (int i = 0; i < 4; i++) {
         memset(buffer, 0, sizeof(buffer));
-        read(outPipes[i][0], buffer, sizeof(buffer) - 1);  // -1 null-termination
+        read(out_pipes[i][0], buffer, sizeof(buffer) - 1);  // -1 null-termination
         results[i] = strdup(buffer);
-        close(outPipes[i][0]);
+        close(out_pipes[i][0]);
     }
     
     size_t n = total_l / 2;
@@ -258,11 +265,18 @@ int main(void) {
     return 0;
 }
 
-static void split_and_insert(char *input, char **first_h, char **second_h, size_t input_l) {
+static int split_and_insert(char *input, char **first_h, char **second_h, size_t input_l) {
     size_t half_l = input_l / 2;
 
     *first_h = strndup(input, half_l);
+    if (first_h == NULL) {
+        return - 1;
+    }
     *second_h = strndup(input + half_l, half_l);
+    if (second_h == NULL) {
+        return - 1;
+    }
+    return 0;
 }
 
 
@@ -285,9 +299,9 @@ static int pad_string(char ** input_str, size_t new_l) {
     size_t padding_len = new_l - original_len;
     *input_str = realloc(*input_str, new_l + 1); // +1 for null terminator
 
-    if (!input_str) {
+    if (input_str == NULL) {
         fprintf(stderr, "Reallocation for string failed\n");
-        return 1;
+        return EXIT_FAILURE;
     }
 
     // Move the characters to the right to create space for padding
@@ -313,10 +327,10 @@ static bool is_hex(const char *str) {
 }
 
 static char *read_line(void) {
-    int buffer_size = 1024;  // Initial buffer size
+    int buffer_size = 1024;
     int position = 0;
     char *buffer = malloc(sizeof(char) * buffer_size);
-    int curr_char;
+    char curr_char;
 
     if (!buffer) {
         fprintf(stderr, "Memory allocation error\n");
@@ -359,36 +373,32 @@ static char int_to_hex_char(int n) {
 }
 
 static char* leftshift_hex_str(const char* hex, size_t bits) {
-    // Determine how many hex digits to add based on the number of bits to shift
     size_t hexDigitsToAdd = bits / 4;
     size_t len = strlen(hex);
     size_t newLen = len + hexDigitsToAdd;
 
-    // Allocate and initialize the new string
     char* shifted = calloc(newLen + 1, sizeof(char));
     if (!shifted) {
         perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
 
-    // Copy the original hex string
     strcpy(shifted, hex);
 
-    // Append the appropriate number of '0's to the end of the string
     memset(shifted + len, '0', hexDigitsToAdd);
 
     return shifted;
 }
 
 static char* add_hex_str(char* number1, char* number2) {
-    // Find lengths of the hex strings
-    int len1 = strlen(number1);
-    int len2 = strlen(number2);
-    // The maximum length of the result would be one more than the longest input
-    int maxLen = (len1 > len2 ? len1 : len2) + 1;
+    size_t len1 = strlen(number1);
+    size_t len2 = strlen(number2);
+    // The maximum length can be one more than the longest input (overflow)
+    size_t maxLen = (len1 > len2 ? len1 : len2) + 1;
 
-    // Allocate space for the result (including null terminator)
+    //(including null terminator)
     char* result = calloc(maxLen + 1, sizeof(char));
+
     if (!result) {
         perror("Memory allocation failed");
         exit(EXIT_FAILURE);
