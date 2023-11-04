@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <errno.h>
+#include <limits.h>
 
 /**
  * Reads input line character for character into char*. Pre-allocates 1024 and dynamically increases if growing is necessary.
@@ -43,7 +45,7 @@ static int pad_string(char **, size_t);
  * @param hex1
  * @param hex2
  */
-static void multiply_and_write_stdout(char*, char*);
+static int multiply_and_write_stdout(char*, char*);
 
 /**
  * Takes unallocated half strings and allocates first half of input into the first and vice versa with second
@@ -117,7 +119,10 @@ int main(void) {
 
     //Base Case for recursion
     if (len1 == 1 && len2 == 1) {
-        multiply_and_write_stdout(line1, line2);
+        if (multiply_and_write_stdout(line1, line2) == -1) {
+            fprintf(stderr, "Failure multiplying base case");
+            return EXIT_FAILURE;
+        }
         return EXIT_SUCCESS;
     }
 
@@ -281,10 +286,19 @@ static int split_and_insert(char *input, char **first_h, char **second_h, size_t
 }
 
 
-static void multiply_and_write_stdout(char* hex1, char* hex2) {
+static int multiply_and_write_stdout(char* hex1, char* hex2) {
     unsigned long val1 = strtoul(hex1, NULL, 16);
+    if ((errno == ERANGE && (val1 == ULONG_MAX || val1 == 0))
+       || (errno != 0 && val1 == 0)) {
+        return -1;
+    }
     unsigned long val2 = strtoul(hex2, NULL, 16);
-    fprintf(stdout, "%lx", val1 * val2);
+    if ((errno == ERANGE && (val2 == ULONG_MAX || val2 == 0))
+        || (errno != 0 && val2 == 0)) {
+        return -1;
+    }
+    fprintf(stdout, "0%lx", val1 * val2);//0needed for correct leading 0s as asked in tuwel forum by me
+    return 0;
 }
 
 
