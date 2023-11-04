@@ -268,7 +268,7 @@ int main(void) {
     padded_pow_2++;
 
     pad_string(&tmp3, padded_pow_2);
-    printf("%s",tmp3);
+    printf("%s\n",tmp3);
 
     free(results[0]);
     free(results[1]);
