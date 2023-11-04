@@ -19,6 +19,7 @@
 
 /**
  * Reads input line character for character into char*. Pre-allocates 1024 and dynamically increases if growing is necessary.
+ * Can fail
  * @details fails if the line is '\0' or
  * @return char* The string that is allocated and read from the input
  */
@@ -30,7 +31,7 @@ static char *read_line(void);
  * @param str pointer to char* where the content is immutable
  * @return true or false depending on if the whole char* is a hexdigit or not
  */
-static bool is_hex(char *);
+static int is_hex(char *);
 
 /**
  * Pads the new string with leading 0s up to length new_l
@@ -104,12 +105,12 @@ int main(void) {
         free(line2);
         return EXIT_FAILURE;
     }
-    if (is_hex(line1) == false) {
+    if (is_hex(line1) == -1) {
         fprintf(stderr, "Entered wrong input for number 1\n");
         return EXIT_FAILURE;
     }
 
-    if (is_hex(line2) == false) {
+    if (is_hex(line2) == -1) {
         fprintf(stderr, "Entered wrong input for number 2\n");
         return EXIT_FAILURE;
     }
@@ -235,20 +236,38 @@ int main(void) {
 
     for (int i = 0; i < 4; i++) {
         memset(buffer, 0, sizeof(buffer));
-        read(out_pipes[i][0], buffer, sizeof(buffer) - 1);  // -1 null-termination
+        if (read(out_pipes[i][0], buffer, sizeof(buffer) - 1) == -1) {// -1 null-termination
+            fprintf(stderr, "Error reading outpipes into buffer");
+            return EXIT_FAILURE;
+        }
         results[i] = strdup(buffer);
         close(out_pipes[i][0]);
     }
     
-    size_t n = total_l / 2;
-    char* s1 = leftshift_hex_str(results[0], 4*n*2);
-    char* s2 = leftshift_hex_str(results[1], 4*n);
-    char* s3 = leftshift_hex_str(results[2], 4*n);
+    size_t n = total_l;
+    char* s1 = leftshift_hex_str(results[0], 4*n);
+    char* s2 = leftshift_hex_str(results[1], 4*n/2);
+    char* s3 = leftshift_hex_str(results[2], 4*n/2);
     char* s4 = leftshift_hex_str(results[3], 0);
     char* tmp1 = add_hex_str(s1, s2);
     char* tmp2 = add_hex_str(s3, s4);
     char* tmp3 = add_hex_str(tmp1, tmp2);
 
+    size_t length1 = strlen(line1);
+    size_t length2 = strlen(line1);
+
+    unsigned long long padded_pow_2 = length1 + length2;
+
+    padded_pow_2--;
+    padded_pow_2 |= padded_pow_2 >> 1;
+    padded_pow_2 |= padded_pow_2 >> 2;
+    padded_pow_2 |= padded_pow_2 >> 4;
+    padded_pow_2 |= padded_pow_2 >> 8;
+    padded_pow_2 |= padded_pow_2 >> 16;
+    padded_pow_2 |= padded_pow_2 >> 32;
+    padded_pow_2++;
+
+    pad_string(&tmp3, padded_pow_2);
     printf("%s",tmp3);
 
     free(results[0]);
@@ -331,14 +350,14 @@ static int pad_string(char ** input_str, size_t new_l) {
     return 0;
 }
 
-static bool is_hex(char *str) {
+static int is_hex(char *str) {
     while (*str) {
         if (!isdigit(*str) && !(tolower(*str) >= 'a' && tolower(*str) <= 'f')) {
-            return false;
+            return -1;
         }
         str++;
     }
-    return true;
+    return 0;
 }
 
 static char *read_line(void) {
