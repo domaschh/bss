@@ -12,8 +12,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/wait.h>
-#include <sys/types.h>
+#include <errno.h>
 
 /**
  * Reads input line character for character into char*. Pre-allocates 1024 and dynamically increases if growing is necessary.
@@ -28,7 +27,7 @@ static char *read_line(void);
  * @param str pointer to char* where the content is immutable
  * @return true or false depending on if the whole char* is a hexdigit or not
  */
-static bool is_hex(char *);
+static bool is_hex(const char *);
 
 /**
  * Pads the new string with leading 0s up to length new_l
@@ -77,7 +76,7 @@ static char int_to_hex_char(int n);
  * @param bits
  * @return
  */
-static char* leftshift_hex_str(char*, size_t);
+static char* leftshift_hex_str(const char*, size_t);
 
 /**
  * Adds two hex numbers represented as char* and returns the result as another char*
@@ -317,7 +316,7 @@ static int pad_string(char ** input_str, size_t new_l) {
     return 0;
 }
 
-static bool is_hex(char *str) {
+static bool is_hex(const char *str) {
     while (*str) {
         if (!isdigit(*str) && !(tolower(*str) >= 'a' && tolower(*str) <= 'f')) {
             return false;
@@ -373,14 +372,14 @@ static char int_to_hex_char(int n) {
     return '0';
 }
 
-static char* leftshift_hex_str(char* hex, size_t bits) {
+static char* leftshift_hex_str(const char* hex, size_t bits) {
     size_t hexDigitsToAdd = bits / 4;
     size_t len = strlen(hex);
     size_t newLen = len + hexDigitsToAdd;
 
     char* shifted = calloc(newLen + 1, sizeof(char));
     if (!shifted) {
-        fprintf(stderr,"Memory allocation failed");
+        perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
 
@@ -394,13 +393,14 @@ static char* leftshift_hex_str(char* hex, size_t bits) {
 static char* add_hex_str(char* number1, char* number2) {
     size_t len1 = strlen(number1);
     size_t len2 = strlen(number2);
+    // The maximum length can be one more than the longest input (overflow)
     size_t maxLen = (len1 > len2 ? len1 : len2) + 1;
 
     //(including null terminator)
     char* result = calloc(maxLen + 1, sizeof(char));
 
     if (!result) {
-        fprintf(stderr,"Memory allocation failed");
+        perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
 
