@@ -268,7 +268,8 @@ int main(void) {
     padded_pow_2++;
 
     pad_string(&tmp3, padded_pow_2);
-    printf("%s\n",tmp3);
+    printf("%s",tmp3);
+    printf("\n");
 
     free(results[0]);
     free(results[1]);
@@ -317,6 +318,7 @@ static int multiply_and_write_stdout(char* hex1, char* hex2) {
         return -1;
     }
     fprintf(stdout, "0%lx", val1 * val2);//0needed for correct leading 0s as asked in tuwel forum by me
+    printf("\n");
     return 0;
 }
 
