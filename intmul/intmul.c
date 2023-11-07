@@ -403,6 +403,7 @@ static char *read_line(void) {
             buffer = realloc(buffer, buffer_size);
             if (!buffer) {
                 fprintf(stderr, "Memory allocation error\n");
+                free(buffer);
                 exit(EXIT_FAILURE);
             }
         }
