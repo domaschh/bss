@@ -383,8 +383,9 @@ static char *read_line(void) {
     char *buffer = malloc(sizeof(char) * buffer_size);
     char curr_char;
 
-    if (!buffer) {
+    if (buffer == NULL) {
         fprintf(stderr, "Memory allocation error\n");
+        free(buffer);
         exit(EXIT_FAILURE);
     }
 
