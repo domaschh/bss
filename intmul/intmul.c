@@ -90,6 +90,14 @@ static char* leftshift_hex_str(char*, size_t);
  */
 static char* add_hex_str(char* number1, char* number2);
 
+void remove_last_zero(char* str) {
+    int length = strlen(str);
+    if(length > 0 && str[length - 1] == '0') {
+        // If the last character is '0', set it to the null terminator
+        str[length - 1] = '\0';
+    }
+}
+
 int main(void) {
     char *line1 = read_line();
     if (strlen(line1) == 0) {
@@ -243,14 +251,17 @@ int main(void) {
         results[i] = strdup(buffer);
         close(out_pipes[i][0]);
     }
-    
+
     size_t n = total_l;
     char* s1 = leftshift_hex_str(results[0], 4*n);
     char* s2 = leftshift_hex_str(results[1], 4*n/2);
     char* s3 = leftshift_hex_str(results[2], 4*n/2);
     char* s4 = leftshift_hex_str(results[3], 0);
+
     char* tmp1 = add_hex_str(s1, s2);
+    remove_last_zero(tmp1);
     char* tmp2 = add_hex_str(s3, s4);
+    remove_last_zero(tmp2);
     char* tmp3 = add_hex_str(tmp1, tmp2);
 
     size_t length1 = strlen(line1);
@@ -317,8 +328,7 @@ static int multiply_and_write_stdout(char* hex1, char* hex2) {
         || (errno != 0 && val2 == 0)) {
         return -1;
     }
-    fprintf(stdout, "0%lx", val1 * val2);//0needed for correct leading 0s as asked in tuwel forum by me
-    printf("\n");
+    fprintf(stdout, "0%lx\n", val1 * val2);//0needed for correct leading 0s as asked in tuwel forum by me
     return 0;
 }
 
@@ -413,7 +423,7 @@ static char* leftshift_hex_str(char* hex, size_t bits) {
     size_t len = strlen(hex);
     size_t newLen = len + hexDigitsToAdd;
 
-    char* shifted = calloc(newLen + 1, sizeof(char));
+    char* shifted = calloc(newLen, sizeof(char));
     if (!shifted) {
         fprintf(stderr,"Memory allocation failed");
         exit(EXIT_FAILURE);
