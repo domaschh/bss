@@ -89,8 +89,13 @@ static char* leftshift_hex_str(char*, size_t);
  * @return
  */
 static char* add_hex_str(char* number1, char* number2);
+/**
+ * Removes the last 0 from a string if 0
+ * @param str
+ */
+static void remove_last_zero(char* str);
 
-void remove_last_zero(char* str) {
+static void remove_last_zero(char* str) {
     int length = strlen(str);
     if(length > 0 && str[length - 1] == '0') {
         // If the last character is '0', set it to the null terminator
@@ -423,7 +428,7 @@ static char* leftshift_hex_str(char* hex, size_t bits) {
     size_t len = strlen(hex);
     size_t newLen = len + hexDigitsToAdd;
 
-    char* shifted = calloc(newLen, sizeof(char));
+    char* shifted = calloc(newLen + 1, sizeof(char));
     if (!shifted) {
         fprintf(stderr,"Memory allocation failed");
         exit(EXIT_FAILURE);
