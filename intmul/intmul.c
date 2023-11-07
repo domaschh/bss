@@ -94,14 +94,11 @@ static char* add_hex_str(char* number1, char* number2);
  * @param str
  */
 static void remove_last_zero(char* str);
-
-static void remove_last_zero(char* str) {
-    int length = strlen(str);
-    if(length > 0 && str[length - 1] == '0') {
-        // If the last character is '0', set it to the null terminator
-        str[length - 1] = '\0';
-    }
-}
+/**
+ * removes leading 0's from a string
+ * @param str
+ */
+static void remove_leading_zeros(char* str);
 
 int main(void) {
     char *line1 = read_line();
@@ -269,6 +266,8 @@ int main(void) {
     remove_last_zero(tmp2);
     char* tmp3 = add_hex_str(tmp1, tmp2);
 
+    remove_leading_zeros(tmp3);
+
     size_t length1 = strlen(line1);
     size_t length2 = strlen(line1);
 
@@ -280,7 +279,6 @@ int main(void) {
     padded_pow_2 |= padded_pow_2 >> 4;
     padded_pow_2 |= padded_pow_2 >> 8;
     padded_pow_2 |= padded_pow_2 >> 16;
-    padded_pow_2 |= padded_pow_2 >> 32;
     padded_pow_2++;
 
     pad_string(&tmp3, padded_pow_2);
@@ -477,4 +475,32 @@ static char* add_hex_str(char* number1, char* number2) {
 
     return result;
 }
+
+static void remove_leading_zeros(char* str) {
+    int i, j;
+    int len = strlen(str);
+
+    for (i = 0; i < len; i++) {
+        if (str[i] != '0') {
+            break;
+        }
+    }
+
+    if (i > 0) {
+        for (j = 0; i < len; j++, i++) {
+            str[j] = str[i];
+        }
+        str[j] = '\0';
+    }
+}
+
+static void remove_last_zero(char* str) {
+    int length = strlen(str);
+    if(length > 0 && str[length - 1] == '0') {
+        // If the last character is '0', set it to the null terminator
+        str[length - 1] = '\0';
+    }
+}
+
+
 
