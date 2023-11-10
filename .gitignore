@@ -4,3 +4,8 @@ li
 1Avigenere/cmake-build-debug
 1Avigenere/testsuite.dSYM
 1Avigenere/vigenere.dSYM
+
+1Acpair
+*
+!*.*
+*.exe

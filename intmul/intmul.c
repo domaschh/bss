@@ -497,7 +497,6 @@ static void remove_leading_zeros(char* str) {
 static void remove_last_zero(char* str) {
     int length = strlen(str);
     if(length > 0 && str[length - 1] == '0') {
-        // If the last character is '0', set it to the null terminator
         str[length - 1] = '\0';
     }
 }

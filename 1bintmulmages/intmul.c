@@ -217,7 +217,7 @@ int main(void) {
     for (int i = 0; i < 4; i++) {
         int child_status;
         waitpid(child_process_ids[i], &child_status, 0);
-        if (child_status == 1) {
+        if (child_status == -1) {
             fprintf(stderr, "Waiting for child failed");
             return EXIT_FAILURE;
         }
