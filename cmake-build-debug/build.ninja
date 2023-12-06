@@ -67,6 +67,12 @@ build CMakeFiles/bss.dir/1Acpair/cpair.c.o: C_COMPILER__bss_unscanned_Debug /Use
   OBJECT_DIR = CMakeFiles/bss.dir
   OBJECT_FILE_DIR = CMakeFiles/bss.dir/1Acpair
 
+build CMakeFiles/bss.dir/23coloring/supervisor.c.o: C_COMPILER__bss_unscanned_Debug /Users/thomasmages/CLionProjects/bss/23coloring/supervisor.c || cmake_object_order_depends_target_bss
+  DEP_FILE = CMakeFiles/bss.dir/23coloring/supervisor.c.o.d
+  FLAGS = -g -std=gnu99 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk -fcolor-diagnostics
+  OBJECT_DIR = CMakeFiles/bss.dir
+  OBJECT_FILE_DIR = CMakeFiles/bss.dir/23coloring
+
 
 # =============================================================================
 # Link build statements for STATIC_LIBRARY target bss
@@ -75,7 +81,7 @@ build CMakeFiles/bss.dir/1Acpair/cpair.c.o: C_COMPILER__bss_unscanned_Debug /Use
 #############################################
 # Link the static library libbss.a
 
-build libbss.a: C_STATIC_LIBRARY_LINKER__bss_Debug CMakeFiles/bss.dir/library.c.o CMakeFiles/bss.dir/intmul/intmul.c.o CMakeFiles/bss.dir/1Acpair/cpair.c.o
+build libbss.a: C_STATIC_LIBRARY_LINKER__bss_Debug CMakeFiles/bss.dir/library.c.o CMakeFiles/bss.dir/intmul/intmul.c.o CMakeFiles/bss.dir/1Acpair/cpair.c.o CMakeFiles/bss.dir/23coloring/supervisor.c.o
   ARCH_FLAGS = -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles/bss.dir
