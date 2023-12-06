@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <semaphore.h>
+#include <sys/stat.h>
 #include "shared.h"
 
 static void read_solutions(circular_buffer *buffer) {
