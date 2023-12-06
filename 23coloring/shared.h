@@ -26,4 +26,7 @@ typedef struct circular_buffer {
     int start;
     int end;
     int nr_in_use;
+    sem_t *sem_filled;
+    sem_t *sem_empty;
+    sem_t *sem_mutex;
 } circular_buffer;
