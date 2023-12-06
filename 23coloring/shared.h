@@ -1,3 +1,16 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <fcntl.h>           // Include for O_CREAT and other flags
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <semaphore.h>
+#include <limits.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/stat.h>
+
 /**
  * struct that holds an edge
  * u = from

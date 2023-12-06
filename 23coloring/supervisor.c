@@ -1,15 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
-#include <fcntl.h>           // Include for O_CREAT and other flags
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <semaphore.h>
-#include <limits.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/stat.h>
 #include "shared.h"
 
 volatile sig_atomic_t terminate = 0;
@@ -17,17 +5,6 @@ volatile sig_atomic_t terminate = 0;
 void handle_signal(int sig) {
     fprintf(stderr,"\nSomething went wrong\n");
     terminate = 1;
-}
-
-static void read_solutions(circular_buffer *buffer) {
-    if (buffer->nr_in_use > 0) {
-        solution sol = buffer->solutions[buffer->start];
-        buffer->start = (buffer->start + 1) % 10;
-        buffer->nr_in_use--;
-
-        // Process the solution
-        // For example, print it or perform calculations
-    } else {}//do nothing and wait
 }
 
 int main(int argc, char *argv[]) {
