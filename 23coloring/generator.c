@@ -94,9 +94,6 @@ int main(int argc, char *argv[]) {
 
     //-----------------Solution Generating---------------
     while(1) {
-        if(circ_buffer->finished == 1) {
-            break;
-        }
         srand(time(NULL));
         edge* solution = malloc(sizeof(edge) * MAX_SOL_SIZE);
         
@@ -125,14 +122,9 @@ int main(int argc, char *argv[]) {
         }
 
         if (curr_sol_count >= 0) {
-            if(circ_buffer->finished == 1) {
-                break;
-            }
             sem_wait(sem_empty); // Wait for an empty slot
             sem_wait(sem_mutex); // Enter critical section
-            if(circ_buffer->finished == 1) {
-                break;
-            }
+           
             #ifdef DEBUG
             if (curr_sol_count > 0) {
                 printf("DEBUG Solution is: %d\n", curr_sol_count);
@@ -141,6 +133,10 @@ int main(int argc, char *argv[]) {
                 }
             }
             if (curr_sol_count == 0) {
+                printf("----------------\n");
+                for(int i = 0 ; i < vertex_ct;i++) {
+                    printf("Edge %d has color %d\n", i, colors[i]);
+                }
                 printf("\nNo edges need to be removed \n");
             }
             #endif
