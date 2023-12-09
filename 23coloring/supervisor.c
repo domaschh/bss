@@ -9,7 +9,7 @@ void handle_signal(int sig) {
 int main(int argc, char *argv[]) {
     int limit = INT_MAX;
     int delay = 0;
-    char* intparsecheck;
+    char* check;
     sem_unlink(SEM_FILLED_ID);
     sem_unlink(SEM_EMPTY_ID);
     sem_unlink(SEM_MUTEX_NAME);
@@ -18,15 +18,15 @@ int main(int argc, char *argv[]) {
     while ((opt = getopt(argc, argv, "n:w:")) != -1) {
         switch (opt) {
             case 'n':
-                limit = strtoul(optarg, &intparsecheck, 10);
-                if (*intparsecheck != '\0') {
+                limit = strtoul(optarg, &check, 10);
+                if (*check != '\0') {
                     fprintf(stderr, "Invalid number for -n: %s\n", optarg);
                     return EXIT_FAILURE;
                 }
                 break;
             case 'w':
-                delay = strtoul(optarg, &intparsecheck, 10);
-                if (*intparsecheck != '\0') {
+                delay = strtoul(optarg, &check, 10);
+                if (*check != '\0') {
                     fprintf(stderr, "Invalid number for -n: %s\n", optarg);
                     return EXIT_FAILURE;
                 }

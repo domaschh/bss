@@ -125,8 +125,14 @@ int main(int argc, char *argv[]) {
         }
 
         if (curr_sol_count >= 0) {
+            if(circ_buffer->finished == 1) {
+                break;
+            }
             sem_wait(sem_empty); // Wait for an empty slot
             sem_wait(sem_mutex); // Enter critical section
+            if(circ_buffer->finished == 1) {
+                break;
+            }
             #ifdef DEBUG
             if (curr_sol_count > 0) {
                 printf("DEBUG Solution is: %d\n", curr_sol_count);
@@ -143,10 +149,12 @@ int main(int argc, char *argv[]) {
             if (circ_buffer->nr_in_use < BUFF_SIZE) {
                 circ_buffer->nr_in_use++;
             }
-
+            if(circ_buffer->finished == 1) {
+                break;
+            }
             sem_post(sem_mutex); // Exit critical section
             sem_post(sem_filled); // Increment the count of filled slots
-            
+
             if(circ_buffer->finished == 1) {
                 break;
             }
