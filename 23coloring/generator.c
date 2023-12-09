@@ -61,6 +61,40 @@ int main(int argc, char *argv[]) {
     }
     int edge_ct = argc-1;
 
+    //-----------------------SHM---------------------
+    sem_filled = sem_open(SEM_FILLED_ID, 0);
+    if (sem_filled == SEM_FAILED) {
+        fprintf(stderr, "opening sem_filled failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // occupied space semaphore
+    sem_empty = sem_open(SEM_EMPTY_ID, 0);
+    if (sem_empty == SEM_FAILED) {
+        fprintf(stderr, "opening sem_empty failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // write-access semaphore
+    sem_mutex = sem_open(SEM_MUTEX_NAME, 0);
+    if (sem_mutex == SEM_FAILED) {
+        fprintf(stderr, "opening sem_mutex failed");
+        exit(EXIT_FAILURE);
+    }
+
+    int shmfd = shm_open(SHM_ID, O_RDWR, 0);
+    if (shmfd == -1) {
+        fprintf(stderr, "opening shm failed failed");
+        exit(EXIT_FAILURE);
+    }
+    circular_buffer* circ_buffer = mmap(NULL, sizeof(struct circular_buffer), PROT_READ | PROT_WRITE, MAP_SHARED,
+                       shmfd, 0);
+    if (circ_buffer == MAP_FAILED) {
+        fprintf(stderr, "mmapping circ buff failed");
+        exit(EXIT_FAILURE);
+    }
+    //---------------------SHMEND-----------------
+
     while(1) {
         srand(time(NULL));
         edge* solution = malloc(sizeof(edge) * MAX_SOL_SIZE);
@@ -92,14 +126,19 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        if (j==0) {
-            free(solution);
-            printf("Graph is 3 colorable\n");
-            break;
-        }
-        for (int i = 0; i < j; i++) {
-            printf("Solution found with\n");
-            printf("(U = %d, V = %d)", solution[i].u, solution[i].v);
+        if (j >= 0) {
+            sem_wait(sem_empty); // Wait for an empty slot
+            sem_wait(sem_mutex); // Enter critical section
+
+        // Write the count 'j' to the circular buffer
+            circ_buffer->solutions[circ_buffer->end] = j;
+            circ_buffer->end = (circ_buffer->end + 1) % BUFF_SIZE;
+            if (circ_buffer->nr_in_use < BUFF_SIZE) {
+                circ_buffer->nr_in_use++;
+            }
+
+            sem_post(sem_mutex); // Exit critical section
+            sem_post(sem_filled); // Increment the count of filled slots
         }
         free(solution);
     }

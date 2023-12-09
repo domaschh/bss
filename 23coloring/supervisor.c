@@ -107,6 +107,10 @@ int main(int argc, char *argv[]) {
     int solutions_read = 0;
 
     while (terminate == 0) {
+        if (solutions_read == limit) {
+            terminate = 1;
+            break;
+        }
     // Attempt to acquire the semaphore without blocking
         if (sem_trywait(sem_filled) == 0) {
             // Semaphore acquired, lock the buffer access
