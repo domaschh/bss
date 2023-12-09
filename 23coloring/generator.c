@@ -91,11 +91,11 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
     //---------------------SHMEND-----------------
+    srand(time(NULL) * getpid());
 
     //-----------------Solution Generating---------------
+    edge* solution = malloc(sizeof(edge) * MAX_SOL_SIZE);
     while(1) {
-        srand(time(NULL));
-        edge* solution = malloc(sizeof(edge) * MAX_SOL_SIZE);
         
         for(int i = 0 ; i < vertex_ct;i++) {
             int random_number = rand() % 3;
@@ -106,9 +106,6 @@ int main(int argc, char *argv[]) {
         int curr_sol_count = 0;
         for (int i=0;i< edge_ct;i++) {
             if(curr_sol_count == MAX_SOL_SIZE) {
-                free(solution);
-                free(edges);
-                free(colors);
                 break;
             }
             if(colors[edges[i].v] == colors[edges[i].u]) {
@@ -116,8 +113,8 @@ int main(int argc, char *argv[]) {
                 curr_sol_count++;
             }
         }
+        //
         if (curr_sol_count == MAX_SOL_SIZE) {
-            free(solution);
             continue;
         }
 
@@ -140,6 +137,7 @@ int main(int argc, char *argv[]) {
                 printf("\nNo edges need to be removed \n");
             }
             #endif
+            fprintf(stderr, "Current writing to %d with val %d\n", circ_buffer->end, curr_sol_count);
             circ_buffer->solutions[circ_buffer->end] = curr_sol_count;
             circ_buffer->end = (circ_buffer->end + 1) % BUFF_SIZE;
             if (circ_buffer->nr_in_use < BUFF_SIZE) {
@@ -155,9 +153,6 @@ int main(int argc, char *argv[]) {
                 break;
             }
         }
-        free(solution);
     }
-    free(colors);
-    free(edges);
     return 0;
 }

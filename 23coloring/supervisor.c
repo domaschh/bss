@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
     printf("\n Limit for solutions to read: %d", limit);
     printf("\n Delay: %d \n", delay);
-
+    //-------------------------------SHM & SEM Mapping----------------------
     int opened = shm_open(SHM_ID, O_RDWR | O_CREAT, 0600);
 
     if (opened == -1) {
@@ -99,6 +99,7 @@ int main(int argc, char *argv[]) {
     sleep(delay);
 
     int solutions_read = 0;
+    //-------------------------------Solution reading----------------------
 
     while (terminate == 0) {
         if (solutions_read == limit) {
@@ -107,9 +108,17 @@ int main(int argc, char *argv[]) {
         }
         if (sem_trywait(sem_filled) == 0) {
             // Semaphore acquired, lock the buffer access
-            sem_wait(sem_mutex);
 
             // Read a solution from the buffer
+            // fprintf(stderr,"Reading from %d\n", circ_buffer->start);
+
+            // int value;
+            // sem_getvalue(sem_empty, &value);
+
+            // fprintf(stderr," sem_empty %d\n", value);
+            // for (int x = 0; x<BUFF_SIZE; x++) {
+            //     fprintf(stderr, "Value in Buff is: %d\n", circ_buffer->solutions[x]);
+            // }
             int current_solution = circ_buffer->solutions[circ_buffer->start];
             circ_buffer->start = (circ_buffer->start + 1) % BUFF_SIZE; // Circular increment
             circ_buffer->nr_in_use--;
