@@ -1,4 +1,5 @@
 #include "shared.h"
+#include <unistd.h> 
 
 volatile sig_atomic_t terminate = 0;
 
@@ -10,6 +11,7 @@ int main(int argc, char *argv[]) {
     int limit = INT_MAX;
     int delay = 0;
     char* check;
+    //needed for it to always work
     sem_unlink(SEM_FILLED_ID);
     sem_unlink(SEM_EMPTY_ID);
     sem_unlink(SEM_MUTEX_NAME);
@@ -37,9 +39,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-
+    #ifdef DEBUG
     printf("\n Limit for solutions to read: %d", limit);
     printf("\n Delay: %d \n", delay);
+    #endif
+
     //-------------------------------SHM & SEM Mapping----------------------
     int opened = shm_open(SHM_ID, O_RDWR | O_CREAT, 0600);
 
@@ -69,7 +73,7 @@ int main(int argc, char *argv[]) {
     circ_buffer->nr_in_use = 0;
     circ_buffer->finished = 0;
 
-    wait(delay);
+    sleep(delay);
 
     sem_filled = sem_open(SEM_FILLED_ID, O_CREAT | O_EXCL, 0600, 0);
     if (sem_filled == SEM_FAILED) {
@@ -107,8 +111,6 @@ int main(int argc, char *argv[]) {
             break; 
         }
         if (sem_trywait(sem_filled) == 0) {
-            // Semaphore acquired, lock the buffer access
-
             // Read a solution from the buffer
             // fprintf(stderr,"Reading from %d\n", circ_buffer->start);
 
@@ -156,9 +158,20 @@ int main(int argc, char *argv[]) {
             break;
         }
     }
+    
     //Notify solution was found
     circ_buffer->finished = 1;
-
+    //continue all 
+    sem_post(sem_empty);
+    sem_post(sem_empty);
+    sem_post(sem_empty);
+    sem_post(sem_empty);
+    sem_post(sem_empty);
+    sem_post(sem_empty);
+    sem_post(sem_empty);
+    sem_post(sem_empty);
+    sem_post(sem_empty);
+    sem_post(sem_empty);
     sem_close(sem_filled);
     sem_close(sem_empty);
     sem_close(sem_mutex);
@@ -167,7 +180,7 @@ int main(int argc, char *argv[]) {
     sem_unlink(SEM_EMPTY_ID);
     sem_unlink(SEM_MUTEX_NAME);
 
-    // munmap(circ_buffer, sizeof(struct circular_buffer));
+    munmap(circ_buffer, sizeof(struct circular_buffer));
     close(opened);
 
     if (terminate == 1) {

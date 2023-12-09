@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "shared.h"
+#include <time.h>
 
 #define MAX_SOL_SIZE 8
 
@@ -13,7 +14,7 @@ int main(int argc, char *argv[]) {
     edge *edges = malloc((argc - 1) * sizeof(edge));
 
     if (edges == NULL) {
-        perror("Edge alllocatoion failed");
+        fprintf(stderr,"Edge alllocatoion failed");
         exit(EXIT_FAILURE);
     }
 
@@ -51,12 +52,6 @@ int main(int argc, char *argv[]) {
         vertex_ct = edges[i-1].v > vertex_ct ? edges[i-1].v : vertex_ct;
     }
     vertex_ct++;
-    int* colors = malloc(sizeof(int) * vertex_ct);
-     if (colors == NULL) {
-        perror("color alllocatoion failed");
-        free(edges);
-        exit(EXIT_FAILURE);
-    }
     int edge_ct = argc-1;
 
     //-----------------------SHM---------------------
@@ -91,19 +86,35 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
     //---------------------SHMEND-----------------
-    srand(time(NULL) * getpid());
 
     //-----------------Solution Generating---------------
+    srand(time(NULL) * getpid());
+    int* colors = malloc(sizeof(int) * vertex_ct);
+    if (colors == NULL) {
+        fprintf(stderr,"color alllocatoion failed");
+        free(edges);
+        exit(EXIT_FAILURE);
+    }
     edge* solution = malloc(sizeof(edge) * MAX_SOL_SIZE);
+    if (solution == NULL) {
+        fprintf(stderr,"color alllocatoion failed");
+        free(edges);
+        free(colors);
+        exit(EXIT_FAILURE);
+    }
     while(1) {
-        
+        if(circ_buffer->finished == 1) {
+            break;
+        }
+        //give each node/vertex a random color (represented in colors array)
         for(int i = 0 ; i < vertex_ct;i++) {
             int random_number = rand() % 3;
             colors[i] = random_number;
         }
         
-
         int curr_sol_count = 0;
+        //for each edge check if the nodes it connetcs have the same color 
+        //if yes increas solution count and save the edge to the solution for optional debug printing
         for (int i=0;i< edge_ct;i++) {
             if(curr_sol_count == MAX_SOL_SIZE) {
                 break;
@@ -113,15 +124,25 @@ int main(int argc, char *argv[]) {
                 curr_sol_count++;
             }
         }
-        //
+        //ignore solutions above 8
         if (curr_sol_count == MAX_SOL_SIZE) {
             continue;
         }
 
+        //write solution to the shared memory
         if (curr_sol_count >= 0) {
+            if(circ_buffer->finished == 1) {
+                break;
+            }
             sem_wait(sem_empty); // Wait for an empty slot
+            if(circ_buffer->finished == 1) {
+                break;
+            }
             sem_wait(sem_mutex); // Enter critical section
-           
+            if(circ_buffer->finished == 1) {
+                break;
+            }
+            //----------DEBUG PRINT START-----------
             #ifdef DEBUG
             if (curr_sol_count > 0) {
                 printf("DEBUG Solution is: %d\n", curr_sol_count);
@@ -137,7 +158,9 @@ int main(int argc, char *argv[]) {
                 printf("\nNo edges need to be removed \n");
             }
             #endif
-            fprintf(stderr, "Current writing to %d with val %d\n", circ_buffer->end, curr_sol_count);
+            //----------DEBUG PRINT END-----------
+
+            // fprintf(stderr, "Current writing to %d with val %d\n", circ_buffer->end, curr_sol_count);
             circ_buffer->solutions[circ_buffer->end] = curr_sol_count;
             circ_buffer->end = (circ_buffer->end + 1) % BUFF_SIZE;
             if (circ_buffer->nr_in_use < BUFF_SIZE) {
@@ -146,13 +169,24 @@ int main(int argc, char *argv[]) {
             if(circ_buffer->finished == 1) {
                 break;
             }
-            sem_post(sem_mutex); // Exit critical section
-            sem_post(sem_filled); // Increment the count of filled slots
-
+            // Exit critical section
+            sem_post(sem_mutex);
+            if(circ_buffer->finished == 1) {
+                break;
+            }
+            // Increment the count of filled slots
+            sem_post(sem_filled); 
             if(circ_buffer->finished == 1) {
                 break;
             }
         }
     }
+    sem_close(sem_filled);
+    sem_close(sem_empty);
+    sem_close(sem_mutex);
+    close(shmfd);
+    free(edges);
+    free(solution);
+    free(colors);
     return 0;
 }
