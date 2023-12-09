@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
-        perror("Must give at least 1 edge");
+        fprintf(stderr,"Must give at least 1 edge\n");
         exit(EXIT_FAILURE);
     }
     edge *edges = malloc((argc - 1) * sizeof(edge));
@@ -49,10 +49,8 @@ int main(int argc, char *argv[]) {
         }
         vertex_ct = edges[i-1].u > vertex_ct ? edges[i-1].u : vertex_ct;
         vertex_ct = edges[i-1].v > vertex_ct ? edges[i-1].v : vertex_ct;
-        printf("Parsed edge: %d-%d\n", edges[i-1].u, edges[i-1].v);
     }
     vertex_ct++;
-    printf("\n Vertex Count: %d\n", vertex_ct);
     int* colors = malloc(sizeof(int) * vertex_ct);
      if (colors == NULL) {
         perror("color alllocatoion failed");
@@ -64,21 +62,21 @@ int main(int argc, char *argv[]) {
     //-----------------------SHM---------------------
     sem_filled = sem_open(SEM_FILLED_ID, 0);
     if (sem_filled == SEM_FAILED) {
-        fprintf(stderr, "opening sem_filled failed");
+        fprintf(stderr, "opening sem_filled failed\n");
         exit(EXIT_FAILURE);
     }
 
     // occupied space semaphore
     sem_empty = sem_open(SEM_EMPTY_ID, 0);
     if (sem_empty == SEM_FAILED) {
-        fprintf(stderr, "opening sem_empty failed");
+        fprintf(stderr, "opening sem_empty failed\n");
         exit(EXIT_FAILURE);
     }
 
     // write-access semaphore
     sem_mutex = sem_open(SEM_MUTEX_NAME, 0);
     if (sem_mutex == SEM_FAILED) {
-        fprintf(stderr, "opening sem_mutex failed");
+        fprintf(stderr, "opening sem_mutex failed\n");
         exit(EXIT_FAILURE);
     }
 
@@ -87,8 +85,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "opening shm failed failed");
         exit(EXIT_FAILURE);
     }
-    circular_buffer* circ_buffer = mmap(NULL, sizeof(struct circular_buffer), PROT_READ | PROT_WRITE, MAP_SHARED,
-                       shmfd, 0);
+    circular_buffer* circ_buffer = mmap(NULL, sizeof(struct circular_buffer), PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
     if (circ_buffer == MAP_FAILED) {
         fprintf(stderr, "mmapping circ buff failed");
         exit(EXIT_FAILURE);
@@ -102,21 +99,18 @@ int main(int argc, char *argv[]) {
         for(int i = 0 ; i < vertex_ct;i++) {
             int random_number = rand() % 3;
             colors[i] = random_number;
-            printf("Color for Vertex: %d = %d\n", i, colors[i]);
         }
         
 
         int j = 0;
         for (int i=0;i< edge_ct;i++) {
             if(j == MAX_SOL_SIZE) {
-                printf("Solution too big \n");
                 free(solution);
                 free(edges);
                 free(colors);
                 break;
             }
             if(colors[edges[i].v] == colors[edges[i].u]) {
-                printf("Same Colored edge: U = %d, V = %d\n C= %d\n", edges[i].v, edges[i].v, colors[edges[i].v]);
                 solution[j]=edges[i];
                 j++;
             }
@@ -129,8 +123,17 @@ int main(int argc, char *argv[]) {
         if (j >= 0) {
             sem_wait(sem_empty); // Wait for an empty slot
             sem_wait(sem_mutex); // Enter critical section
-
-        // Write the count 'j' to the circular buffer
+            #ifdef DEBUG
+            if (j > 0) {
+                printf("DEBUG Solution is: %d\n", j);
+                for (int k = 0; k < j; k++) {
+                  printf("DEBUG: Edge %d - U: %d, V: %d\n", k, solution[k].u, solution[k].v);
+                }
+            }
+            if (j == 0) {
+                printf("No edges need to be removed");
+            }
+            #endif
             circ_buffer->solutions[circ_buffer->end] = j;
             circ_buffer->end = (circ_buffer->end + 1) % BUFF_SIZE;
             if (circ_buffer->nr_in_use < BUFF_SIZE) {

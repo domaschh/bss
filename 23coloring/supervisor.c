@@ -11,15 +11,9 @@ int main(int argc, char *argv[]) {
     int limit = INT_MAX;
     int delay = 0;
     char* intparsecheck;
-    if (sem_unlink(SEM_FILLED_ID) == -1) {
-        perror("Error unlinking /sem_filled");
-    }
-    if (sem_unlink(SEM_EMPTY_ID) == -1) {
-        perror("Error unlinking /sem_empty");
-    }
-    if (sem_unlink(SEM_MUTEX_NAME) == -1) {
-        perror("Error unlinking /sem_mutex");
-    }
+    sem_unlink(SEM_FILLED_ID);
+    sem_unlink(SEM_EMPTY_ID);
+    sem_unlink(SEM_MUTEX_NAME);
     int opt;
 
     while ((opt = getopt(argc, argv, "n:w:")) != -1) {
@@ -45,8 +39,8 @@ int main(int argc, char *argv[]) {
     }
 
 
-    printf("\n Lim: %d", limit);
-    printf("\n delay: %d \n", delay);
+    printf("\n Limit for solutions to read: %d", limit);
+    printf("\n Delay: %d \n", delay);
 
     int opened = shm_open(SHM_ID, O_RDWR | O_CREAT, 0600);
 
@@ -109,9 +103,8 @@ int main(int argc, char *argv[]) {
     while (terminate == 0) {
         if (solutions_read == limit) {
             terminate = 1;
-            break;
+            break; 
         }
-    // Attempt to acquire the semaphore without blocking
         if (sem_trywait(sem_filled) == 0) {
             // Semaphore acquired, lock the buffer access
             sem_wait(sem_mutex);
@@ -164,7 +157,6 @@ int main(int argc, char *argv[]) {
 
     munmap(circ_buffer, sizeof(struct circular_buffer));
     close(opened);
-    fprintf(stdout,"\n Success Siging \n");
 
     if (terminate == 1) {
         printf("The graph might not be 3-colorable, best solution removes %d edges.\n", best_solution);
