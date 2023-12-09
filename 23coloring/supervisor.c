@@ -3,7 +3,6 @@
 volatile sig_atomic_t terminate = 0;
 
 void handle_signal(int sig) {
-    fprintf(stderr,"\nSomething went wrong\n");
     terminate = 1;
 }
 
@@ -68,6 +67,7 @@ int main(int argc, char *argv[]) {
     circ_buffer->start = 0;
     circ_buffer->end = 0;
     circ_buffer->nr_in_use = 0;
+    circ_buffer->finished = 0;
 
     wait(delay);
 
@@ -124,6 +124,7 @@ int main(int argc, char *argv[]) {
             // Process the solution
             if (current_solution == 0) {
                 printf("The graph is 3-colorable!\n");
+                circ_buffer->finished = 1;
                 break;
             }
 
@@ -146,6 +147,8 @@ int main(int argc, char *argv[]) {
             break;
         }
     }
+    //Notify solution was found
+    circ_buffer->finished = 1;
 
     sem_close(sem_filled);
     sem_close(sem_empty);
@@ -155,7 +158,7 @@ int main(int argc, char *argv[]) {
     sem_unlink(SEM_EMPTY_ID);
     sem_unlink(SEM_MUTEX_NAME);
 
-    munmap(circ_buffer, sizeof(struct circular_buffer));
+    // munmap(circ_buffer, sizeof(struct circular_buffer));
     close(opened);
 
     if (terminate == 1) {

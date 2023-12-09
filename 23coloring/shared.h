@@ -41,6 +41,7 @@ typedef struct circular_buffer {
     int start;
     int end;
     int nr_in_use;
+    int finished;
 } circular_buffer;
 
 #define SEM_FILLED_ID "/12124528_SEM_FILLED"

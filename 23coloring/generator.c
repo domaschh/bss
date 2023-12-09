@@ -92,7 +92,11 @@ int main(int argc, char *argv[]) {
     }
     //---------------------SHMEND-----------------
 
+    //-----------------Solution Generating---------------
     while(1) {
+        if(circ_buffer->finished == 1) {
+            break;
+        }
         srand(time(NULL));
         edge* solution = malloc(sizeof(edge) * MAX_SOL_SIZE);
         
@@ -102,39 +106,39 @@ int main(int argc, char *argv[]) {
         }
         
 
-        int j = 0;
+        int curr_sol_count = 0;
         for (int i=0;i< edge_ct;i++) {
-            if(j == MAX_SOL_SIZE) {
+            if(curr_sol_count == MAX_SOL_SIZE) {
                 free(solution);
                 free(edges);
                 free(colors);
                 break;
             }
             if(colors[edges[i].v] == colors[edges[i].u]) {
-                solution[j]=edges[i];
-                j++;
+                solution[curr_sol_count]=edges[i];
+                curr_sol_count++;
             }
         }
-        if (j == MAX_SOL_SIZE) {
+        if (curr_sol_count == MAX_SOL_SIZE) {
             free(solution);
             continue;
         }
 
-        if (j >= 0) {
+        if (curr_sol_count >= 0) {
             sem_wait(sem_empty); // Wait for an empty slot
             sem_wait(sem_mutex); // Enter critical section
             #ifdef DEBUG
-            if (j > 0) {
-                printf("DEBUG Solution is: %d\n", j);
-                for (int k = 0; k < j; k++) {
+            if (curr_sol_count > 0) {
+                printf("DEBUG Solution is: %d\n", curr_sol_count);
+                for (int k = 0; k < curr_sol_count; k++) {
                   printf("DEBUG: Edge %d - U: %d, V: %d\n", k, solution[k].u, solution[k].v);
                 }
             }
-            if (j == 0) {
-                printf("No edges need to be removed");
+            if (curr_sol_count == 0) {
+                printf("\nNo edges need to be removed \n");
             }
             #endif
-            circ_buffer->solutions[circ_buffer->end] = j;
+            circ_buffer->solutions[circ_buffer->end] = curr_sol_count;
             circ_buffer->end = (circ_buffer->end + 1) % BUFF_SIZE;
             if (circ_buffer->nr_in_use < BUFF_SIZE) {
                 circ_buffer->nr_in_use++;
@@ -142,6 +146,10 @@ int main(int argc, char *argv[]) {
 
             sem_post(sem_mutex); // Exit critical section
             sem_post(sem_filled); // Increment the count of filled slots
+            
+            if(circ_buffer->finished == 1) {
+                break;
+            }
         }
         free(solution);
     }
