@@ -11,6 +11,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#define BUFF_SIZE 10
 /**
  * struct that holds an edge
  * u = from
@@ -30,16 +31,22 @@ typedef struct solution {
     int nr_edges;
 } solution;
 
+#define SHM_ID "/12124528_SHM"
 /**
  * Circular buffeer of size 10 that stores an array of solutions
  * nr_in_use = how many solutions are currently in the buffer
  */
 typedef struct circular_buffer {
-    solution solutions[10];
+    int solutions[BUFF_SIZE];
     int start;
     int end;
     int nr_in_use;
-    sem_t *sem_filled;
-    sem_t *sem_empty;
-    sem_t *sem_mutex;
 } circular_buffer;
+
+#define SEM_FILLED_ID "/12124528_SEM_FILLED"
+#define SEM_EMPTY_ID "/12124528_SEM_EMPTY"
+#define SEM_MUTEX_NAME "/12124528_SEM_MUTEX"
+
+sem_t *sem_filled;
+sem_t *sem_empty;
+sem_t *sem_mutex;

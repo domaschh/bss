@@ -11,13 +11,13 @@ int main(int argc, char *argv[]) {
     int limit = INT_MAX;
     int delay = 0;
     char* intparsecheck;
-    if (sem_unlink("/12124528_sem_filled") == -1) {
+    if (sem_unlink(SEM_FILLED_ID) == -1) {
         perror("Error unlinking /sem_filled");
     }
-    if (sem_unlink("/12124528_sem_empty") == -1) {
+    if (sem_unlink(SEM_EMPTY_ID) == -1) {
         perror("Error unlinking /sem_empty");
     }
-    if (sem_unlink("/12124528_sem_mutex") == -1) {
+    if (sem_unlink(SEM_MUTEX_NAME) == -1) {
         perror("Error unlinking /sem_mutex");
     }
     int opt;
@@ -48,14 +48,14 @@ int main(int argc, char *argv[]) {
     printf("\n Lim: %d", limit);
     printf("\n delay: %d \n", delay);
 
-    int opened = shm_open("/y12124528", O_EXCL | O_RDWR, 0600);
+    int opened = shm_open(SHM_ID, O_RDWR | O_CREAT, 0600);
 
     if (opened == -1) {
         fprintf(stderr, "Failed call to shm_open: %s\n", strerror(errno));
         return EXIT_FAILURE;
     }
 
-    if(ftruncate(opened, sizeof(circular_buffer)) == -1 ) {
+    if(ftruncate(opened, sizeof(struct circular_buffer)) == -1 ) {
         close(opened);
         fprintf(stderr, "Failed to truncate shared memory");
         return EXIT_FAILURE;
@@ -77,26 +77,25 @@ int main(int argc, char *argv[]) {
 
     wait(delay);
 
-    circ_buffer->sem_filled = sem_open("/12124528_sem_filled", O_CREAT | O_EXCL, 0600, 0);
-    if (circ_buffer->sem_filled == SEM_FAILED) {
+    sem_filled = sem_open(SEM_FILLED_ID, O_CREAT | O_EXCL, 0600, 0);
+    if (sem_filled == SEM_FAILED) {
         perror("sem_open sem_filled");
         exit(EXIT_FAILURE);
     }
 
-    circ_buffer->sem_empty = sem_open("/12124528_sem_empty", O_CREAT | O_EXCL, 0600, 10); // Assuming buffer size is 10
-    if (circ_buffer->sem_empty == SEM_FAILED) {
+    sem_empty = sem_open(SEM_EMPTY_ID, O_CREAT | O_EXCL, 0600, 10); // Assuming buffer size is 10
+    if (sem_empty == SEM_FAILED) {
         perror("sem_open sem_empty");
         exit(EXIT_FAILURE);
     }
 
-    circ_buffer->sem_mutex = sem_open("/12124528_sem_mutex", O_CREAT | O_EXCL , 0600, 1);
-    if (circ_buffer->sem_mutex == SEM_FAILED) {
+    sem_mutex = sem_open(SEM_MUTEX_NAME, O_CREAT | O_EXCL , 0600, 1);
+    if (sem_mutex == SEM_FAILED) {
         perror("sem_open sem_mutex");
         exit(EXIT_FAILURE);
     }
 
-    solution best_solution;
-    best_solution.nr_edges = INT_MAX;
+    int best_solution = INT_MAX;
 
     // Setting up signal handling
     signal(SIGINT, handle_signal);
@@ -109,31 +108,31 @@ int main(int argc, char *argv[]) {
 
     while (terminate == 0) {
     // Attempt to acquire the semaphore without blocking
-        if (sem_trywait(circ_buffer->sem_filled) == 0) {
+        if (sem_trywait(sem_filled) == 0) {
             // Semaphore acquired, lock the buffer access
-            sem_wait(circ_buffer->sem_mutex);
+            sem_wait(sem_mutex);
 
             // Read a solution from the buffer
-            solution current_solution = circ_buffer->solutions[circ_buffer->start];
-            circ_buffer->start = (circ_buffer->start + 1) % 10; // Circular increment
+            int current_solution = circ_buffer->solutions[circ_buffer->start];
+            circ_buffer->start = (circ_buffer->start + 1) % BUFF_SIZE; // Circular increment
             circ_buffer->nr_in_use--;
             solutions_read++;
 
             // Unlock the buffer
-            sem_post(circ_buffer->sem_mutex);
+            sem_post(sem_mutex);
 
             // Signal that a slot is now empty
-            sem_post(circ_buffer->sem_empty);
+            sem_post(sem_empty);
 
             // Process the solution
-            if (current_solution.nr_edges == 0) {
+            if (current_solution == 0) {
                 printf("The graph is 3-colorable!\n");
                 break;
             }
 
-            if (current_solution.nr_edges < best_solution.nr_edges) {
+            if (current_solution < best_solution) {
                 best_solution = current_solution;
-                fprintf(stderr, "New best solution with %d edges.\n", best_solution.nr_edges);
+                fprintf(stderr, "New best solution with %d edges.\n", best_solution);
             }
         } else {
             if (errno == EAGAIN) {
@@ -151,20 +150,20 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    sem_close(circ_buffer->sem_filled);
-    sem_close(circ_buffer->sem_empty);
-    sem_close(circ_buffer->sem_mutex);
+    sem_close(sem_filled);
+    sem_close(sem_empty);
+    sem_close(sem_mutex);
 
-    sem_unlink("/sem_filled");
-    sem_unlink("/sem_empty");
-    sem_unlink("/sem_mutex");
+    sem_unlink(SEM_FILLED_ID);
+    sem_unlink(SEM_EMPTY_ID);
+    sem_unlink(SEM_MUTEX_NAME);
 
-    munmap(circ_buffer, sizeof(circular_buffer));
+    munmap(circ_buffer, sizeof(struct circular_buffer));
     close(opened);
     fprintf(stdout,"\n Success Siging \n");
 
     if (terminate == 1) {
-        printf("The graph might not be 3-colorable, best solution removes %d edges.\n", best_solution.nr_edges);
+        printf("The graph might not be 3-colorable, best solution removes %d edges.\n", best_solution);
         return EXIT_SUCCESS;
     }
     return 0;

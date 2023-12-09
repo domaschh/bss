@@ -3,6 +3,8 @@
 #include <string.h>
 #include "shared.h"
 
+#define MAX_SOL_SIZE 8
+
 int main(int argc, char *argv[]) {
     if (argc <= 1) {
         perror("Must give at least 1 edge");
@@ -61,7 +63,7 @@ int main(int argc, char *argv[]) {
 
     while(1) {
         srand(time(NULL));
-        edge* solution = malloc(sizeof(edge) * 8);
+        edge* solution = malloc(sizeof(edge) * MAX_SOL_SIZE);
         
         for(int i = 0 ; i < vertex_ct;i++) {
             int random_number = rand() % 3;
@@ -72,7 +74,7 @@ int main(int argc, char *argv[]) {
 
         int j = 0;
         for (int i=0;i< edge_ct;i++) {
-            if(j == 8) {
+            if(j == MAX_SOL_SIZE) {
                 printf("Solution too big \n");
                 free(solution);
                 free(edges);
@@ -85,7 +87,7 @@ int main(int argc, char *argv[]) {
                 j++;
             }
         }
-        if (j == 8) {
+        if (j == MAX_SOL_SIZE) {
             free(solution);
             continue;
         }
