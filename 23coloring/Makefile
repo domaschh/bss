@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Makefile for 33coloring
+# Makefile for 3coloring
 #
 # Author: Thomas Mages
 # Email: e12124528@student.tuwien.ac.at
@@ -10,8 +10,6 @@
 CC=gcc
 CFLAGS=-std=c99 -pedantic -Wall -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE \
                  -D_POSIX_C_SOURCE=200809L -g -lrt -lpthread
-                 OBJS = intmul.o
-
 
 # All targets
 all: supervisor generator

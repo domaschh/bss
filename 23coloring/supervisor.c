@@ -77,19 +77,19 @@ int main(int argc, char *argv[]) {
 
     sem_filled = sem_open(SEM_FILLED_ID, O_CREAT | O_EXCL, 0600, 0);
     if (sem_filled == SEM_FAILED) {
-        perror("sem_open sem_filled");
+        fprintf(stderr,"sem_open sem_filled");
         exit(EXIT_FAILURE);
     }
 
     sem_empty = sem_open(SEM_EMPTY_ID, O_CREAT | O_EXCL, 0600, 10); // Assuming buffer size is 10
     if (sem_empty == SEM_FAILED) {
-        perror("sem_open sem_empty");
+        fprintf(stderr,"sem_open sem_empty");
         exit(EXIT_FAILURE);
     }
 
     sem_mutex = sem_open(SEM_MUTEX_NAME, O_CREAT | O_EXCL , 0600, 1);
     if (sem_mutex == SEM_FAILED) {
-        perror("sem_open sem_mutex");
+        fprintf(stderr,"sem_open sem_mutex");
         exit(EXIT_FAILURE);
     }
 
@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
                 usleep(10000); // 10 milliseconds
             } else {
                 // Handle other errors
-                perror("sem_trywait error");
+                fprintf(stderr,"sem_trywait error");
             }
         }
 
