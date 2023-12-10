@@ -1,3 +1,11 @@
+/**
+ * @file generator.c
+ * @author Thomas Mages 12124528
+ * @brief Generates multiple solutions for the supervisor to consume
+ * @details This program generates colored combinations for vertextes in a graph and writes edge removal
+ * sets to the shm for the supervisor to consuimes
+ * @date 12-10-2023
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -134,11 +142,11 @@ int main(int argc, char *argv[]) {
             if(circ_buffer->finished == 1) {
                 break;
             }
-            sem_wait(sem_empty); // Wait for an empty slot
+            sem_wait(sem_empty);
             if(circ_buffer->finished == 1) {
                 break;
             }
-            sem_wait(sem_mutex); // Enter critical section
+            sem_wait(sem_mutex);
             if(circ_buffer->finished == 1) {
                 break;
             }

@@ -1,8 +1,20 @@
+/**
+ * @file supervisor.c
+ * @author Thomas Mages 12124528
+ * @brief Supervises multiple solutions from the generator
+ * @details This program repeatedly checks ffor new best solution and ends if limit has been reachd or the graph is 3 colorable
+ * @date 12-10-2023
+ */
 #include "shared.h"
 #include <unistd.h> 
 
 volatile sig_atomic_t terminate = 0;
 
+/**
+ * @brief Sets the global terminationflag to true
+ * @param c
+ * @return
+ */
 void handle_signal(int sig) {
     terminate = 1;
 }
@@ -110,6 +122,7 @@ int main(int argc, char *argv[]) {
             terminate = 1;
             break; 
         }
+        //needed or orhteriwse the termination of signal handling doesnt interrupt
         if (sem_trywait(sem_filled) == 0) {
             // Read a solution from the buffer
             // fprintf(stderr,"Reading from %d\n", circ_buffer->start);
